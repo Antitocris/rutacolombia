@@ -32,9 +32,10 @@ import co.exploracolombia.domain.model.SiteBrief
 fun MapScreen(
     viewModel: MapViewModel,
     onScanRequested: (SiteBrief) -> Unit,
+    onAlbumRequested: () -> Unit,
 ) {
     LocationPermissionGate {
-        MapContent(viewModel, onScanRequested)
+        MapContent(viewModel, onScanRequested, onAlbumRequested)
     }
 }
 
@@ -43,6 +44,7 @@ fun MapScreen(
 private fun MapContent(
     viewModel: MapViewModel,
     onScanRequested: (SiteBrief) -> Unit,
+    onAlbumRequested: () -> Unit,
 ) {
     val gamification by viewModel.gamification.collectAsState()
     val selectedSite by viewModel.selectedSite.collectAsState()
@@ -72,6 +74,7 @@ private fun MapContent(
         RealMap(
             sites = viewModel.sites,
             reachableSiteIds = reachableSiteIds,
+            pastedBadgeCodes = gamification.pastedBadgeCodes,
             userLocation = userLocation,
             onSiteTap = { viewModel.selectSite(it) },
             modifier = Modifier.fillMaxSize(),
@@ -80,6 +83,7 @@ private fun MapContent(
         GamificationHeader(
             gamification = gamification,
             sites = viewModel.sites,
+            onOpenAlbum = onAlbumRequested,
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()

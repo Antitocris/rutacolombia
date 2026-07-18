@@ -24,7 +24,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import co.exploracolombia.domain.model.SiteBrief
 import co.exploracolombia.presentation.theme.RutaColors
-import org.osmdroid.config.Configuration
+import kotlinx.coroutines.delay
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
@@ -37,6 +37,7 @@ private val FALLBACK_CENTER = GeoPoint(4.598146, -74.076004)
 private const val DEFAULT_ZOOM = 15.5
 private const val MIN_ZOOM = 2.5 // suficiente para ver el planeta completo
 private const val MAX_ZOOM = 20.0
+private const val BLINK_INTERVAL_MS = 650L
 
 /**
  * Mapa real (OpenStreetMap vía osmdroid) — YA NO es un lienzo ilustrado.
@@ -48,6 +49,7 @@ private const val MAX_ZOOM = 20.0
 fun RealMap(
     sites: List<SiteBrief>,
     reachableSiteIds: Set<String>,
+    pastedBadgeCodes: Set<String>,
     userLocation: Pair<Double, Double>?,
     onSiteTap: (SiteBrief) -> Unit,
     modifier: Modifier = Modifier,
@@ -97,8 +99,25 @@ fun RealMap(
         }
     }
 
-    LaunchedEffect(sites, reachableSiteIds, userLocation) {
-        rebuildOverlays(context, mapView, sites, reachableSiteIds, userLocation, onSiteTap)
+    var missionMarkers by remember { mutableStateOf<List<Marker>>(emptyList()) }
+
+    LaunchedEffect(sites, reachableSiteIds, pastedBadgeCodes, userLocation) {
+        missionMarkers = rebuildOverlays(context, mapView, sites, reachableSiteIds, pastedBadgeCodes, userLocation, onSiteTap)
+    }
+
+    // "Icono parpadeante" para las misiones sin coleccionar: osmdroid dibuja
+    // sobre una Canvas de Android View, no de Compose, así que la animación
+    // no puede ser un AnimatedFloat normal — se alterna el alpha del bitmap
+    // a mano y se pide un redibujado (invalidate) en cada paso.
+    LaunchedEffect(missionMarkers) {
+        if (missionMarkers.isEmpty()) return@LaunchedEffect
+        var bright = true
+        while (true) {
+            delay(BLINK_INTERVAL_MS)
+            bright = !bright
+            missionMarkers.forEach { it.alpha = if (bright) 1f else 0.45f }
+            mapView.invalidate()
+        }
     }
 
     Box(modifier = modifier.fillMaxSize()) {
@@ -119,28 +138,33 @@ fun RealMap(
     }
 }
 
+/** Devuelve los marcadores de sitios TODAVÍA NO pegados en el Álbum — esos son los que parpadean. */
 private fun rebuildOverlays(
     context: android.content.Context,
     mapView: MapView,
     sites: List<SiteBrief>,
     reachableSiteIds: Set<String>,
+    pastedBadgeCodes: Set<String>,
     userLocation: Pair<Double, Double>?,
     onSiteTap: (SiteBrief) -> Unit,
-) {
+): List<Marker> {
     // Se limpian y se vuelven a agregar todos los overlays en cada
     // recomposición relevante — para el tamaño de catálogo de esta app
     // (unos pocos sitios) es más simple y menos propenso a bugs que llevar
     // un diff incremental de marcadores.
     mapView.overlays.removeAll { it is Marker }
 
+    val missionMarkers = mutableListOf<Marker>()
+
     sites.forEach { site ->
         val reachable = reachableSiteIds.contains(site.id)
+        val collected = pastedBadgeCodes.contains(site.badge.code)
         val marker = Marker(mapView).apply {
             position = GeoPoint(site.lat, site.lng)
             setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
             icon = MarkerIconFactory.createLabeledPin(
                 context = context,
-                label = site.titleEs,
+                label = "Lámina #${site.laminaNumber} · ${site.titleEs}",
                 rarity = site.badge.rarity,
                 locked = !reachable,
             )
@@ -150,6 +174,7 @@ private fun rebuildOverlays(
             }
         }
         mapView.overlays.add(marker)
+        if (!collected) missionMarkers.add(marker)
     }
 
     if (userLocation != null) {
@@ -163,4 +188,5 @@ private fun rebuildOverlays(
     }
 
     mapView.invalidate()
+    return missionMarkers
 }

@@ -1,6 +1,7 @@
 package co.exploracolombia.presentation.map
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,12 +12,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,95 +37,104 @@ import co.exploracolombia.presentation.theme.RutaColors
  * Tarjeta flotante (elevación real, no una franja que corta la pantalla) —
  * MapScreen la posiciona sobre el mapa con márgenes, para que el mapa se
  * sienta como el lienzo de fondo del juego y esto como un panel de HUD
- * encima, al estilo de un mapa de RPG/aventura.
+ * encima. La fila de insignias sueltas se reemplazó por un acceso directo
+ * al Álbum completo (ver AlbumScreen.kt) — ahí es donde de verdad viven las
+ * láminas, con sus 3 estados y el reverso; acá solo se resume el progreso.
  */
 @Composable
 fun GamificationHeader(
     gamification: GamificationState,
     sites: List<SiteBrief>,
+    onOpenAlbum: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val pastedCount = sites.count { gamification.laminaStateFor(it.badge.code) == LaminaState.PASTED }
+    val newlyEarnedCount = sites.count { gamification.laminaStateFor(it.badge.code) == LaminaState.EARNED_UNPASTED }
+
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = RutaColors.JungleGreenDark),
         elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
     ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(RutaColors.Gold),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = gamification.level.toString(),
-                    color = RutaColors.GoldInk,
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.titleLarge,
-                )
-            }
-
-            Spacer(modifier = Modifier.width(14.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth(),
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(RutaColors.Gold),
+                    contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = "Nivel ${gamification.level}",
+                        text = gamification.level.toString(),
+                        color = RutaColors.GoldInk,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(14.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(
+                            text = "Nivel ${gamification.level}",
+                            color = RutaColors.Parchment,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(
+                            text = "${gamification.xpIntoLevel} / ${gamification.xpForNextLevel} XP",
+                            color = RutaColors.Parchment.copy(alpha = 0.75f),
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(6.dp))
+                    XpBar(progress = gamification.levelProgress)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color.White.copy(alpha = 0.08f))
+                    .clickable(onClick = onOpenAlbum)
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(imageVector = Icons.Filled.MenuBook, contentDescription = null, tint = RutaColors.Gold)
+                Spacer(modifier = Modifier.width(10.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Álbum: $pastedCount/${sites.size} láminas",
                         color = RutaColors.Parchment,
                         fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.bodyMedium,
                     )
-                    Text(
-                        text = "${gamification.xpIntoLevel} / ${gamification.xpForNextLevel} XP",
-                        color = RutaColors.Parchment.copy(alpha = 0.75f),
-                        style = MaterialTheme.typography.bodySmall,
-                    )
+                    if (newlyEarnedCount > 0) {
+                        Text(
+                            text = "¡Tienes $newlyEarnedCount por pegar!",
+                            color = RutaColors.Gold,
+                            style = MaterialTheme.typography.labelSmall,
+                        )
+                    }
                 }
-                Spacer(modifier = Modifier.height(6.dp))
-                XpBar(progress = gamification.levelProgress)
+                Icon(imageVector = Icons.Filled.ChevronRight, contentDescription = null, tint = RutaColors.Parchment.copy(alpha = 0.7f))
             }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = "Insignias",
-            color = RutaColors.Parchment.copy(alpha = 0.85f),
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.Bold,
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            items(sites, key = { it.id }) { site ->
-                val unlocked = gamification.unlockedBadgeCodes.contains(site.badge.code)
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    BadgeIcon(rarity = site.badge.rarity, locked = !unlocked, size = 52.dp)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = if (unlocked) site.badge.nameEs else "???",
-                        color = if (unlocked) RutaColors.Parchment else RutaColors.Parchment.copy(alpha = 0.45f),
-                        style = MaterialTheme.typography.labelSmall,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.width(64.dp),
-                    )
-                }
-            }
-        }
-    }
     }
 }
 

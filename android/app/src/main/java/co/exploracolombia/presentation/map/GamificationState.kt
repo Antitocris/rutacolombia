@@ -12,10 +12,25 @@ private const val XP_PER_LEVEL = 500
  */
 data class GamificationState(
     val totalXp: Int = 0,
+    // "Conseguida" al validar la visita con la cámara (ver VisitViewModel /
+    // AppRoot.onVisitSuccess) — todavía en gris hasta que el usuario la
+    // "pegue" a mano en el Álbum, igual que un cromo suelto de verdad.
     val unlockedBadgeCodes: Set<String> = emptySet(),
+    // "Pegada": el usuario tocó la silueta gris en AlbumScreen y la lámina
+    // quedó a todo color. Solo entonces cuenta como completada de verdad.
+    val pastedBadgeCodes: Set<String> = emptySet(),
 ) {
     val level: Int get() = (totalXp / XP_PER_LEVEL) + 1
     val xpIntoLevel: Int get() = totalXp % XP_PER_LEVEL
     val xpForNextLevel: Int get() = XP_PER_LEVEL
     val levelProgress: Float get() = xpIntoLevel / XP_PER_LEVEL.toFloat()
+}
+
+/** Los 3 estados posibles de una lámina en el Álbum — igual que un cromo Jet de verdad. */
+enum class LaminaState { LOCKED, EARNED_UNPASTED, PASTED }
+
+fun GamificationState.laminaStateFor(badgeCode: String): LaminaState = when {
+    pastedBadgeCodes.contains(badgeCode) -> LaminaState.PASTED
+    unlockedBadgeCodes.contains(badgeCode) -> LaminaState.EARNED_UNPASTED
+    else -> LaminaState.LOCKED
 }

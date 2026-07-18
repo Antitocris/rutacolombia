@@ -63,7 +63,7 @@ class MapViewModel(private val locationTracker: LocationTracker) : ViewModel() {
         _selectedSite.value = null
     }
 
-    /** Llamar cuando ScanScreen termina una visita con éxito. */
+    /** Llamar cuando ScanScreen termina una visita con éxito. La lámina queda "conseguida" pero gris hasta que se pegue. */
     fun onVisitCompleted(result: VisitResult) {
         if (!result.success) return
         _gamification.update { current ->
@@ -72,6 +72,14 @@ class MapViewModel(private val locationTracker: LocationTracker) : ViewModel() {
                 unlockedBadgeCodes = result.badge?.let { current.unlockedBadgeCodes + it.code }
                     ?: current.unlockedBadgeCodes,
             )
+        }
+    }
+
+    /** Llamar cuando el usuario toca una silueta gris en AlbumScreen para "pegarla". */
+    fun pasteLamina(badgeCode: String) {
+        _gamification.update { current ->
+            if (badgeCode !in current.unlockedBadgeCodes) return@update current
+            current.copy(pastedBadgeCodes = current.pastedBadgeCodes + badgeCode)
         }
     }
 

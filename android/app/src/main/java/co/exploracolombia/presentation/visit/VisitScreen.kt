@@ -55,6 +55,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import co.exploracolombia.data.local.SiteCatalog
 import co.exploracolombia.domain.model.BadgeRarity
 import co.exploracolombia.domain.model.VisitResult
 import co.exploracolombia.presentation.theme.RutaColors
@@ -298,6 +299,8 @@ private fun VisitSuccessSheet(result: VisitResult, onDismiss: () -> Unit) {
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
 
+    val laminaNumber = result.badge?.let { badge -> SiteCatalog.all.find { it.badge.code == badge.code }?.laminaNumber }
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
@@ -311,7 +314,7 @@ private fun VisitSuccessSheet(result: VisitResult, onDismiss: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = "¡Hito desbloqueado!",
+                text = if (laminaNumber != null) "¡Has conseguido la Lámina #$laminaNumber!" else "¡Hito desbloqueado!",
                 style = MaterialTheme.typography.labelLarge,
                 color = RutaColors.JungleGreen,
                 fontWeight = FontWeight.Bold,
@@ -347,6 +350,15 @@ private fun VisitSuccessSheet(result: VisitResult, onDismiss: () -> Unit) {
                 color = RutaColors.JungleGreenDark,
                 modifier = Modifier.padding(top = 16.dp),
             )
+
+            if (laminaNumber != null) {
+                Text(
+                    text = "Ve al Álbum y toca la lámina #$laminaNumber para pegarla.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = RutaColors.StoneGrey,
+                    modifier = Modifier.padding(top = 12.dp),
+                )
+            }
 
             Button(
                 onClick = {
