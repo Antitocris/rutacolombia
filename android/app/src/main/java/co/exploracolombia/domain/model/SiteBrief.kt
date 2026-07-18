@@ -20,6 +20,15 @@ data class SiteBrief(
     val geofenceRadiusMeters: Int,
     val titleEs: String,
     val titleEn: String,
+    /**
+     * Nombre de "misión de misterio", evocador — el que de verdad se
+     * muestra en el pin del mapa, la lámina y el encabezado de la tarjeta
+     * de detalle. `titleEs`/`titleEn` (el nombre oficial/técnico) queda
+     * como dato secundario, no como lo primero que el jugador ve — ese es
+     * justo el cambio que se pidió: dejar de sentirse como Google Maps.
+     */
+    val missionTitleEs: String,
+    val missionTitleEn: String,
     val narrativeEs: String,
     val narrativeEn: String,
     val coverImageUrl: String?,
@@ -49,14 +58,20 @@ data class BadgeBrief(
     val rarity: BadgeRarity,
 )
 
-/** Las páginas temáticas del Álbum — el orden de esta lista es el orden en que aparecen las pestañas. */
-enum class AlbumPage(val titleEs: String, val titleEn: String) {
-    BOGOTA_COLONIAL("Bogotá Colonial", "Colonial Bogotá"),
-    MUSEOS_E_HISTORIA("Museos e Historia", "Museums & History"),
-    MURALLAS_DE_CARTAGENA("Murallas de Cartagena", "Walls of Cartagena"),
-    MIRADORES_Y_NATURALEZA("Miradores y Naturaleza", "Viewpoints & Nature"),
-    BOGOTA_MODERNA("Bogotá Moderna", "Modern Bogotá"),
-    PARQUES_Y_BARRIOS("Parques y Barrios", "Parks & Neighborhoods"),
+/**
+ * Las páginas temáticas del Álbum — el orden de esta lista es el orden en
+ * que aparecen las pestañas. `rewardTitleEs/En` es el título de perfil real
+ * que se desbloquea al completar TODA la página (ver GamificationState /
+ * MapViewModel.pasteLamina) — la recompensa real que se pidió, no solo un
+ * contador que sube.
+ */
+enum class AlbumPage(val titleEs: String, val titleEn: String, val rewardTitleEs: String, val rewardTitleEn: String) {
+    BOGOTA_COLONIAL("Bogotá Colonial", "Colonial Bogotá", "Cronista de la Candelaria", "Chronicler of La Candelaria"),
+    MUSEOS_E_HISTORIA("Museos e Historia", "Museums & History", "Guardián del Dorado", "Guardian of El Dorado"),
+    MURALLAS_DE_CARTAGENA("Murallas de Cartagena", "Walls of Cartagena", "Corsario de las Murallas", "Corsair of the Walls"),
+    MIRADORES_Y_NATURALEZA("Miradores y Naturaleza", "Viewpoints & Nature", "Señor de las Alturas", "Lord of the Heights"),
+    BOGOTA_MODERNA("Bogotá Moderna", "Modern Bogotá", "Arquitecto Errante", "Wandering Architect"),
+    BOGOTA_OCULTA("Bogotá Oculta y Secreta", "Hidden & Secret Bogotá", "Cazador de Leyendas", "Legend Hunter"),
 }
 
 fun SiteBrief.toHistoricalSite(isUnlocked: Boolean): HistoricalSite = HistoricalSite(
@@ -67,7 +82,7 @@ fun SiteBrief.toHistoricalSite(isUnlocked: Boolean): HistoricalSite = Historical
     lat = lat,
     lng = lng,
     geofenceRadiusMeters = geofenceRadiusMeters,
-    title = titleEs,
+    title = missionTitleEs,
     narrative = narrativeEs,
     coverImageUrl = coverImageUrl,
     xpReward = xpReward,

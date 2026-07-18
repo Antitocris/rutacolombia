@@ -91,16 +91,22 @@ fun SiteDetailSheet(
             Spacer(modifier = Modifier.height(6.dp))
 
             Text(
-                text = site.titleEs,
+                text = site.missionTitleEs,
                 color = RutaColors.JungleGreenDark,
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.headlineSmall,
             )
             Text(
-                text = site.titleEn,
+                text = site.missionTitleEn,
                 color = RutaColors.StoneGrey,
                 fontStyle = FontStyle.Italic,
                 style = MaterialTheme.typography.titleSmall,
+            )
+            Text(
+                text = "También conocido como ${site.titleEs} · ${site.titleEn}",
+                color = RutaColors.StoneGrey.copy(alpha = 0.7f),
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.padding(top = 2.dp),
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -184,7 +190,7 @@ private fun PhotoChallengeCard(site: SiteBrief, completed: Boolean, onComplete: 
                     style = MaterialTheme.typography.labelLarge,
                 )
                 Text(
-                    text = "Sube una foto de un detalle curioso de ${site.titleEs} — un balcón, una textura, un rincón que nadie más note.",
+                    text = "Sube una foto de un detalle curioso de ${site.missionTitleEs} — un balcón, una textura, un rincón que nadie más note.",
                     color = RutaColors.StoneGrey,
                     style = MaterialTheme.typography.bodySmall,
                 )

@@ -14,6 +14,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+const val HISTORY_POINTS_PER_POST = 25
+const val HINT_COST_POINTS = 50
+
 class MapViewModel(private val locationTracker: LocationTracker) : ViewModel() {
 
     val sites: List<SiteBrief> = SiteCatalog.all
@@ -63,10 +66,20 @@ class MapViewModel(private val locationTracker: LocationTracker) : ViewModel() {
         _selectedSite.value = null
     }
 
-    /** Llamar cuando ScanScreen termina una visita con éxito. La lámina queda "conseguida" pero gris hasta que se pegue. */
+    /**
+     * Llamar cuando ScanScreen termina una visita con éxito. La lámina queda
+     * "conseguida" pero gris hasta que se pegue. Si el hito tiene una foto
+     * histórica real (ver SiteBrief.historicalPhotoUrl), esta visita también
+     * habilita una publicación nueva en el Feed de la Historia — eso
+     * otorga Puntos de Historia de una vez, no hace falta "publicar" un
+     * paso aparte.
+     */
     fun onVisitCompleted(siteId: String, result: VisitResult) {
         if (!result.success) return
         _gamification.update { current ->
+            val isNewFeedPost = result.photoUrl.isNotBlank() &&
+                siteId !in current.capturedPhotoUrls &&
+                sites.find { it.id == siteId }?.historicalPhotoUrl != null
             current.copy(
                 totalXp = result.totalXp,
                 unlockedBadgeCodes = result.badge?.let { current.unlockedBadgeCodes + it.code }
@@ -76,15 +89,29 @@ class MapViewModel(private val locationTracker: LocationTracker) : ViewModel() {
                 } else {
                     current.capturedPhotoUrls
                 },
+                historyPoints = if (isNewFeedPost) current.historyPoints + HISTORY_POINTS_PER_POST else current.historyPoints,
             )
         }
     }
 
-    /** Llamar cuando el usuario toca una silueta gris en AlbumScreen para "pegarla". */
+    /**
+     * Llamar cuando el usuario toca una silueta gris en AlbumScreen para
+     * "pegarla". Si esta lámina era la última que faltaba de su página, la
+     * página completa se marca como conseguida — eso desbloquea el título
+     * de perfil y suma al multiplicador de XP (ver GamificationState).
+     */
     fun pasteLamina(badgeCode: String) {
         _gamification.update { current ->
             if (badgeCode !in current.unlockedBadgeCodes) return@update current
-            current.copy(pastedBadgeCodes = current.pastedBadgeCodes + badgeCode)
+            val newPasted = current.pastedBadgeCodes + badgeCode
+            val site = sites.find { it.badge.code == badgeCode }
+            val newCompletedPages = if (site != null) {
+                val pageComplete = sites.filter { it.albumPage == site.albumPage }.all { it.badge.code in newPasted }
+                if (pageComplete) current.completedPages + site.albumPage else current.completedPages
+            } else {
+                current.completedPages
+            }
+            current.copy(pastedBadgeCodes = newPasted, completedPages = newCompletedPages)
         }
     }
 
@@ -93,16 +120,40 @@ class MapViewModel(private val locationTracker: LocationTracker) : ViewModel() {
      * ReviewsSection): otorga XP local al toque, una sola vez por sitio. Sin
      * verificación por IA de que la foto en verdad corresponda al reto —
      * limitación conocida de esta primera versión, documentada en
-     * GamificationState.
+     * GamificationState. El multiplicador de páginas completas SÍ aplica
+     * acá (a diferencia del XP de visita, que es autoridad del backend y
+     * nunca se infla en el cliente).
      */
     fun completePhotoChallenge(siteId: String, bonusXp: Int) {
         _gamification.update { current ->
             if (siteId in current.completedPhotoChallengeSiteIds) return@update current
             current.copy(
-                totalXp = current.totalXp + bonusXp,
+                totalXp = current.totalXp + (bonusXp * current.xpMultiplier).toInt(),
                 completedPhotoChallengeSiteIds = current.completedPhotoChallengeSiteIds + siteId,
             )
         }
+    }
+
+    /**
+     * Gasta Puntos de Historia en una Pista: revela cuál es la misión sin
+     * descubrir más cercana (nombre + distancia real si hay GPS). Devuelve
+     * null si no hay puntos suficientes o si ya no queda nada por descubrir
+     * — el llamador (FeedScreen) decide cómo comunicar cada caso.
+     */
+    fun redeemHint(): HintResult? {
+        val current = _gamification.value
+        if (current.historyPoints < HINT_COST_POINTS) return null
+        val undiscovered = sites.filter { it.badge.code !in current.unlockedBadgeCodes }
+        if (undiscovered.isEmpty()) return null
+        val userLoc = _userLocation.value
+        val target = if (userLoc != null) {
+            undiscovered.minByOrNull { haversineMeters(userLoc.first, userLoc.second, it.lat, it.lng) }
+        } else {
+            undiscovered.first()
+        } ?: return null
+        val distanceMeters = userLoc?.let { haversineMeters(it.first, it.second, target.lat, target.lng).toInt() }
+        _gamification.update { it.copy(historyPoints = it.historyPoints - HINT_COST_POINTS) }
+        return HintResult(missionTitleEs = target.missionTitleEs, city = target.city, distanceMeters = distanceMeters)
     }
 
     override fun onCleared() {
@@ -110,3 +161,5 @@ class MapViewModel(private val locationTracker: LocationTracker) : ViewModel() {
         stopLocationUpdates()
     }
 }
+
+data class HintResult(val missionTitleEs: String, val city: String, val distanceMeters: Int?)

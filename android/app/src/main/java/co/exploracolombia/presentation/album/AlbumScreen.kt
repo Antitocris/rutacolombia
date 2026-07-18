@@ -129,21 +129,33 @@ fun AlbumScreen(viewModel: MapViewModel, onBack: () -> Unit) {
 @Composable
 private fun AlbumPageHeader(page: AlbumPage, sitesInPage: List<SiteBrief>, gamification: GamificationState) {
     val pastedInPage = sitesInPage.count { gamification.laminaStateFor(it.badge.code) == LaminaState.PASTED }
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.Bottom,
-    ) {
-        Text(
-            text = page.titleEs,
-            color = RutaColors.JungleGreenDark,
-            fontWeight = FontWeight.Bold,
-            style = MaterialTheme.typography.titleLarge,
-        )
-        Text(
-            text = "$pastedInPage/${sitesInPage.size}",
-            color = RutaColors.StoneGrey,
-            style = MaterialTheme.typography.labelLarge,
-        )
+    val pageComplete = page in gamification.completedPages
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Bottom,
+        ) {
+            Text(
+                text = page.titleEs,
+                color = if (pageComplete) RutaColors.Gold else RutaColors.JungleGreenDark,
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.titleLarge,
+            )
+            Text(
+                text = "$pastedInPage/${sitesInPage.size}",
+                color = RutaColors.StoneGrey,
+                style = MaterialTheme.typography.labelLarge,
+            )
+        }
+        if (pageComplete) {
+            Text(
+                text = "🏆 Página completa — título desbloqueado: \"${page.rewardTitleEs}\"",
+                color = RutaColors.GoldInk,
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+        }
     }
 }

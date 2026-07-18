@@ -104,6 +104,16 @@ fun GamificationHeader(
                 }
             }
 
+            gamification.activeTitleEs?.let { title ->
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "🏆 $title · XP x%.1f".format(gamification.xpMultiplier),
+                    color = RutaColors.Gold,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.labelMedium,
+                )
+            }
+
             Spacer(modifier = Modifier.height(14.dp))
 
             Row(

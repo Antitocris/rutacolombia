@@ -88,7 +88,7 @@ private fun PastedFace(site: SiteBrief) {
     Box(modifier = Modifier.fillMaxSize()) {
         AsyncImage(
             model = site.coverImageUrl,
-            contentDescription = site.titleEs,
+            contentDescription = site.missionTitleEs,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize(),
         )
@@ -100,7 +100,7 @@ private fun PastedFace(site: SiteBrief) {
                 .padding(top = 24.dp, bottom = 8.dp, start = 8.dp, end = 8.dp),
         ) {
             Text(
-                text = site.titleEs,
+                text = site.missionTitleEs,
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.labelMedium,
@@ -125,9 +125,11 @@ private fun GreySilhouetteFace(site: SiteBrief, glowing: Boolean) {
             .background(if (glowing) RutaColors.JungleGreen else RutaColors.ParchmentDim),
     ) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            SilhouetteIcon(
-                tint = if (glowing) RutaColors.Gold.copy(alpha = 0.85f) else RutaColors.StoneGrey.copy(alpha = 0.4f),
-            )
+            if (glowing) {
+                SilhouetteIcon(tint = RutaColors.Gold.copy(alpha = 0.85f))
+            } else {
+                MysterySilhouette()
+            }
         }
         Box(
             modifier = Modifier
@@ -136,7 +138,7 @@ private fun GreySilhouetteFace(site: SiteBrief, glowing: Boolean) {
                 .padding(bottom = 8.dp, start = 6.dp, end = 6.dp),
         ) {
             Text(
-                text = if (glowing) site.titleEs else "¿ ? ? ?",
+                text = if (glowing) site.missionTitleEs else "¿ ? ? ?",
                 color = if (glowing) RutaColors.Gold else RutaColors.StoneGrey,
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.labelMedium,
@@ -166,6 +168,34 @@ private fun LaminaNumberBadge(number: Int, modifier: Modifier = Modifier, dimmed
             color = if (dimmed) Color.White.copy(alpha = 0.7f) else RutaColors.GoldInk,
             fontWeight = FontWeight.Bold,
             style = MaterialTheme.typography.labelSmall,
+        )
+    }
+}
+
+/**
+ * Tratamiento "misterio sin descubrir" de una lámina — nada de flechas
+ * grises de oficina: niebla en capas (varios círculos radiales
+ * translúcidos, no una forma sólida) con un signo de interrogación grande
+ * estilo RPG flotando en el centro, para que dé ganas de ir a ver qué hay
+ * ahí en vez de comunicar "contenido pendiente" de forma burocrática.
+ */
+@Composable
+private fun MysterySilhouette() {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val w = size.width
+            val h = size.height
+            val mistColor = Color(0xFF3A4A42)
+            drawCircle(color = mistColor.copy(alpha = 0.30f), radius = w * 0.42f, center = Offset(w * 0.32f, h * 0.38f))
+            drawCircle(color = mistColor.copy(alpha = 0.24f), radius = w * 0.36f, center = Offset(w * 0.68f, h * 0.55f))
+            drawCircle(color = mistColor.copy(alpha = 0.20f), radius = w * 0.30f, center = Offset(w * 0.48f, h * 0.72f))
+            drawCircle(color = mistColor.copy(alpha = 0.16f), radius = w * 0.46f, center = Offset(w * 0.5f, h * 0.5f))
+        }
+        Text(
+            text = "?",
+            color = RutaColors.Parchment.copy(alpha = 0.55f),
+            fontWeight = FontWeight.Black,
+            style = MaterialTheme.typography.displayMedium,
         )
     }
 }

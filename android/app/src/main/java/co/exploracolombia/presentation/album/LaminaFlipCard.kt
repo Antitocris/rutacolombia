@@ -74,10 +74,15 @@ fun LaminaFlipCard(site: SiteBrief, totalXp: Int, onDismiss: () -> Unit) {
                             style = MaterialTheme.typography.labelLarge,
                         )
                         Text(
-                            text = site.titleEs,
+                            text = site.missionTitleEs,
                             color = Color.White,
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.titleLarge,
+                        )
+                        Text(
+                            text = site.titleEs,
+                            color = Color.White.copy(alpha = 0.7f),
+                            style = MaterialTheme.typography.labelMedium,
                         )
                     }
                     IconButton(onClick = onDismiss) {

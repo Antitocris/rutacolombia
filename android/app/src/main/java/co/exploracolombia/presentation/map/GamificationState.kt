@@ -1,6 +1,9 @@
 package co.exploracolombia.presentation.map
 
+import co.exploracolombia.domain.model.AlbumPage
+
 private const val XP_PER_LEVEL = 500
+private const val XP_MULTIPLIER_PER_COMPLETED_PAGE = 0.1f
 
 /**
  * Progreso del jugador. Vive solo en memoria (ver MapViewModel) mientras no
@@ -32,11 +35,30 @@ data class GamificationState(
     // pasa por Vision API en el backend). Documentado así a propósito para
     // no aparentar una verificación que todavía no existe.
     val completedPhotoChallengeSiteIds: Set<String> = emptySet(),
+    // Páginas del Álbum 100% pegadas — cada una otorga un título de perfil
+    // real (ver AlbumPage.rewardTitleEs/En) y suma al multiplicador de XP.
+    // Un Set, no un contador: idempotente, no se puede "completar dos veces"
+    // la misma página por error.
+    val completedPages: Set<AlbumPage> = emptySet(),
+    // "Puntos de Historia": moneda del Feed. Se otorgan al publicar con
+    // éxito una comparación antes/después (ver MapViewModel.onVisitCompleted)
+    // y se gastan en Pistas. Versión honesta de lo pedido: el sistema
+    // original imaginaba puntos "basados en likes de otros usuarios", pero
+    // eso requeriría un backend de posts+likes compartido entre usuarios
+    // (fuera del alcance de esta pasada) — por ahora es una recompensa
+    // inmediata al publicar, no una que dependa de que otros la aprueben.
+    val historyPoints: Int = 0,
 ) {
     val level: Int get() = (totalXp / XP_PER_LEVEL) + 1
     val xpIntoLevel: Int get() = totalXp % XP_PER_LEVEL
     val xpForNextLevel: Int get() = XP_PER_LEVEL
     val levelProgress: Float get() = xpIntoLevel / XP_PER_LEVEL.toFloat()
+
+    /** +10% de XP por cada página completa — recompensa acumulable real, no cosmética. */
+    val xpMultiplier: Float get() = 1f + completedPages.size * XP_MULTIPLIER_PER_COMPLETED_PAGE
+
+    /** El título más reciente desbloqueado (orden de declaración del enum) — el que se muestra en el HUD. */
+    val activeTitleEs: String? get() = completedPages.maxByOrNull { it.ordinal }?.rewardTitleEs
 }
 
 /** Los 3 estados posibles de una lámina en el Álbum — igual que un cromo Jet de verdad. */

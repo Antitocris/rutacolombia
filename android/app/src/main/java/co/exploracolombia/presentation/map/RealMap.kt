@@ -52,24 +52,26 @@ private const val BLINK_INTERVAL_MS = 650L
 private const val CLUSTER_RADIUS_PX = 100
 
 /**
- * Basemap "limpio" (CartoDB Voyager) en vez del Mapnik estándar de OSM: menos
- * ruido de rótulos secundarios (nombres de barrio diminutos, íconos de POI
- * ajenos a la app) y una paleta de grises/verdes suaves — se ve a propósito, no
- * la calcomanía técnica de un mapa de navegación GPS. Sigue siendo 100% datos
- * de OpenStreetMap por debajo, solo cambia el estilo de dibujo; no requiere
- * API key. Atribución obligatoria de CARTO incluida en el copyright del tile source.
+ * Basemap oscuro y sin rótulos (CartoDB Dark Matter, variante "nolabels") —
+ * segundo pivote de estilo: el primer intento (CartoDB Voyager, claro) ya
+ * había reemplazado al Mapnik técnico de OSM, pero seguía sintiéndose como
+ * un mapa de navegación. Esta variante oculta POR COMPLETO los nombres de
+ * calle y zonas comerciales — la única rotulación que el jugador ve es la
+ * de las propias misiones (ver MarkerIconFactory), a propósito, para que el
+ * mapa se sienta como un tablero de exploración y no como Google Maps.
+ * Sigue siendo 100% datos de OpenStreetMap por debajo; no requiere API key.
  */
-private val CARTO_VOYAGER = object : OnlineTileSourceBase(
-    "CartoDBVoyager",
+private val CARTO_DARK_NOLABELS = object : OnlineTileSourceBase(
+    "CartoDBDarkNoLabels",
     0,
     20,
     256,
     ".png",
     arrayOf(
-        "https://a.basemaps.cartocdn.com/rastertiles/voyager/",
-        "https://b.basemaps.cartocdn.com/rastertiles/voyager/",
-        "https://c.basemaps.cartocdn.com/rastertiles/voyager/",
-        "https://d.basemaps.cartocdn.com/rastertiles/voyager/",
+        "https://a.basemaps.cartocdn.com/dark_nolabels/",
+        "https://b.basemaps.cartocdn.com/dark_nolabels/",
+        "https://c.basemaps.cartocdn.com/dark_nolabels/",
+        "https://d.basemaps.cartocdn.com/dark_nolabels/",
     ),
     "© OpenStreetMap contributors © CARTO",
 ) {
@@ -100,7 +102,7 @@ fun RealMap(
 
     val mapView = remember {
         MapView(context).apply {
-            setTileSource(CARTO_VOYAGER)
+            setTileSource(CARTO_DARK_NOLABELS)
             setMultiTouchControls(true)
             zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
             minZoomLevel = MIN_ZOOM
@@ -263,7 +265,7 @@ private fun rebuildOverlays(
                 setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                 icon = MarkerIconFactory.createLabeledPin(
                     context = context,
-                    label = "Lámina #${site.laminaNumber} · ${site.titleEs}",
+                    label = "Lámina #${site.laminaNumber} · ${site.missionTitleEs}",
                     rarity = site.badge.rarity,
                     locked = !reachable,
                 )
