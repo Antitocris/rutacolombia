@@ -20,6 +20,8 @@ import androidx.compose.material3.SheetState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Place
@@ -27,10 +29,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil3.compose.AsyncImage
 import co.exploracolombia.domain.model.SiteBrief
+import co.exploracolombia.presentation.reviews.ReviewsSection
+import co.exploracolombia.presentation.reviews.ReviewsViewModel
 import co.exploracolombia.presentation.theme.RutaColors
 
 /**
@@ -44,16 +52,24 @@ import co.exploracolombia.presentation.theme.RutaColors
 fun SiteDetailSheet(
     site: SiteBrief,
     sheetState: SheetState,
+    reviewsViewModelFactory: (String) -> ViewModelProvider.Factory,
+    photoChallengeCompleted: Boolean,
+    onPhotoChallengeComplete: () -> Unit,
     onDismiss: () -> Unit,
     onScanClick: () -> Unit,
 ) {
+    val reviewsViewModel: ReviewsViewModel = viewModel(
+        key = "reviews-${site.id}",
+        factory = reviewsViewModelFactory(site.id),
+    )
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         containerColor = RutaColors.Parchment,
     ) {
         Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 32.dp)) {
-            SiteCoverArt(rarity = site.badge.rarity)
+            SiteCoverArt(coverImageUrl = site.coverImageUrl, rarity = site.badge.rarity)
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -127,22 +143,81 @@ fun SiteDetailSheet(
                     maxLines = 2,
                 )
             }
+
+            Spacer(modifier = Modifier.height(20.dp))
+            PhotoChallengeCard(
+                site = site,
+                completed = photoChallengeCompleted,
+                onComplete = onPhotoChallengeComplete,
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+            HorizontalDivider(color = RutaColors.StoneGrey.copy(alpha = 0.25f))
+            Spacer(modifier = Modifier.height(20.dp))
+
+            ReviewsSection(viewModel = reviewsViewModel)
         }
     }
 }
 
 @Composable
-private fun SiteCoverArt(rarity: co.exploracolombia.domain.model.BadgeRarity) {
+private fun PhotoChallengeCard(site: SiteBrief, completed: Boolean, onComplete: () -> Unit) {
+    Surface(
+        color = RutaColors.Gold.copy(alpha = if (completed) 0.10f else 0.18f),
+        shape = RoundedCornerShape(14.dp),
+    ) {
+        Row(
+            modifier = Modifier.padding(14.dp).fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = if (completed) Icons.Filled.CheckCircle else Icons.Filled.CameraAlt,
+                contentDescription = null,
+                tint = RutaColors.GoldInk,
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Reto fotográfico comunitario",
+                    color = RutaColors.JungleGreenDark,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.labelLarge,
+                )
+                Text(
+                    text = "Sube una foto de un detalle curioso de ${site.titleEs} — un balcón, una textura, un rincón que nadie más note.",
+                    color = RutaColors.StoneGrey,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            Spacer(modifier = Modifier.width(10.dp))
+            Button(onClick = onComplete, enabled = !completed) {
+                Text(if (completed) "Completado" else "+50 XP")
+            }
+        }
+    }
+}
+
+@Composable
+private fun SiteCoverArt(coverImageUrl: String?, rarity: co.exploracolombia.domain.model.BadgeRarity) {
     Surface(
         color = RutaColors.JungleGreen,
         shape = RoundedCornerShape(20.dp),
         modifier = Modifier.fillMaxWidth().height(160.dp),
     ) {
-        Box(contentAlignment = Alignment.Center) {
-            // Sin foto real todavía (cover_image_url llega vacío del backend):
-            // se usa la insignia como arte de portada en vez de un hueco en
-            // blanco o un ícono de cámara genérico.
-            BadgeIcon(rarity = rarity, locked = false, size = 84.dp)
+        if (coverImageUrl != null) {
+            AsyncImage(
+                model = coverImageUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxWidth().height(160.dp),
+            )
+        } else {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth().height(160.dp)) {
+                // Sin foto real (cover_image_url no vino para este sitio):
+                // se usa la insignia como arte de portada en vez de un hueco en
+                // blanco o un ícono de cámara genérico.
+                BadgeIcon(rarity = rarity, locked = false, size = 84.dp)
+            }
         }
     }
 }

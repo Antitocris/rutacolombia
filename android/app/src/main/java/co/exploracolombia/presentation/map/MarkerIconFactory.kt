@@ -104,6 +104,83 @@ object MarkerIconFactory {
         canvas.drawCircle(centerX, bulbCenterY, radius * 0.4f, corePaint)
     }
 
+    /**
+     * Insignia circular para un grupo de hitos amontonados (clustering) — a
+     * propósito con una forma distinta (círculo, no gota) para que de un
+     * vistazo se note que NO es un sitio individual tocable, sino un grupo
+     * que hay que acercar con zoom para separar.
+     */
+    fun createClusterBadge(
+        context: Context,
+        count: Int,
+        label: String,
+        hasPendingMission: Boolean,
+    ): android.graphics.drawable.Drawable {
+        val density = context.resources.displayMetrics.density
+        val circleRadius = 26 * density
+        val labelPaddingH = (10 * density)
+        val labelPaddingV = (5 * density)
+        val gap = (4 * density)
+
+        val countPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.WHITE
+            textSize = 17 * density
+            textAlign = Paint.Align.CENTER
+            isFakeBoldText = true
+        }
+        val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.parseColor("#211C13")
+            textSize = 12 * density
+            textAlign = Paint.Align.CENTER
+            isFakeBoldText = true
+        }
+        val labelWidth = textPaint.measureText(label) + labelPaddingH * 2
+        val labelHeight = (12 * density) + labelPaddingV * 2
+
+        val totalWidth = maxOf(circleRadius * 2, labelWidth).toInt() + (4 * density).toInt()
+        val totalHeight = (circleRadius * 2 + gap + labelHeight).toInt()
+
+        val bitmap = Bitmap.createBitmap(totalWidth, totalHeight, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        val centerX = totalWidth / 2f
+        val circleCenterY = circleRadius
+
+        val circleFill = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.parseColor(if (hasPendingMission) "#3A7D5C" else "#8A8375")
+        }
+        canvas.drawCircle(centerX, circleCenterY, circleRadius, circleFill)
+        val circleStroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.WHITE
+            style = Paint.Style.STROKE
+            strokeWidth = 3f * density
+        }
+        canvas.drawCircle(centerX, circleCenterY, circleRadius, circleStroke)
+
+        val countBaseline = circleCenterY - (countPaint.descent() + countPaint.ascent()) / 2f
+        canvas.drawText(count.toString(), centerX, countBaseline, countPaint)
+
+        val labelTop = circleRadius * 2 + gap
+        val labelRect = RectF(
+            centerX - labelWidth / 2f,
+            labelTop,
+            centerX + labelWidth / 2f,
+            labelTop + labelHeight,
+        )
+        val chipPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.parseColor("#FBF7EE") }
+        canvas.drawRoundRect(labelRect, 8 * density, 8 * density, chipPaint)
+        val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.parseColor("#A97B25")
+            style = Paint.Style.STROKE
+            strokeWidth = 1.2f * density
+        }
+        canvas.drawRoundRect(labelRect, 8 * density, 8 * density, borderPaint)
+
+        val labelBaseline = labelRect.centerY() - (textPaint.descent() + textPaint.ascent()) / 2f
+        canvas.drawText(label, centerX, labelBaseline, textPaint)
+
+        return bitmap.toDrawable(context.resources)
+    }
+
     /** Punto azul simple para "tu ubicación" — deliberadamente distinto de los pines dorados de los hitos. */
     fun createUserDot(context: Context): android.graphics.drawable.Drawable {
         val density = context.resources.displayMetrics.density

@@ -1,3 +1,6 @@
+# Configuración local de Claude Code (no es parte del proyecto)
+.claude/
+
 # Secretos locales — nunca commitear
 supabase/functions/**/.env
 supabase/.env

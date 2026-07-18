@@ -19,6 +19,19 @@ data class GamificationState(
     // "Pegada": el usuario tocó la silueta gris en AlbumScreen y la lámina
     // quedó a todo color. Solo entonces cuenta como completada de verdad.
     val pastedBadgeCodes: Set<String> = emptySet(),
+    // Foto REAL que el propio usuario capturó al validar cada hito (la URL
+    // que ya devuelve validate-visit, subida a Supabase Storage) — clave
+    // para el Feed de la Historia: es el lado "después" del comparador, no
+    // una imagen de stock. Vive solo en memoria por ahora, igual que el
+    // resto de este estado.
+    val capturedPhotoUrls: Map<String, String> = emptyMap(),
+    // Retos fotográficos comunitarios completados (ver ReviewsSection /
+    // SiteDetailSheet) — mecánica local de esta primera versión: otorga XP
+    // al toque, sin validación por IA de que la foto en verdad muestre el
+    // detalle pedido (a diferencia del XP de la visita principal, que sí
+    // pasa por Vision API en el backend). Documentado así a propósito para
+    // no aparentar una verificación que todavía no existe.
+    val completedPhotoChallengeSiteIds: Set<String> = emptySet(),
 ) {
     val level: Int get() = (totalXp / XP_PER_LEVEL) + 1
     val xpIntoLevel: Int get() = totalXp % XP_PER_LEVEL

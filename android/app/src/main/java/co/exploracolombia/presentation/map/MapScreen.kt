@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.ViewModelProvider
 import co.exploracolombia.domain.model.SiteBrief
 
 /**
@@ -31,11 +32,12 @@ import co.exploracolombia.domain.model.SiteBrief
 @Composable
 fun MapScreen(
     viewModel: MapViewModel,
+    reviewsViewModelFactory: (String) -> ViewModelProvider.Factory,
     onScanRequested: (SiteBrief) -> Unit,
     onAlbumRequested: () -> Unit,
 ) {
     LocationPermissionGate {
-        MapContent(viewModel, onScanRequested, onAlbumRequested)
+        MapContent(viewModel, reviewsViewModelFactory, onScanRequested, onAlbumRequested)
     }
 }
 
@@ -43,6 +45,7 @@ fun MapScreen(
 @Composable
 private fun MapContent(
     viewModel: MapViewModel,
+    reviewsViewModelFactory: (String) -> ViewModelProvider.Factory,
     onScanRequested: (SiteBrief) -> Unit,
     onAlbumRequested: () -> Unit,
 ) {
@@ -96,6 +99,9 @@ private fun MapContent(
         SiteDetailSheet(
             site = site,
             sheetState = sheetState,
+            reviewsViewModelFactory = reviewsViewModelFactory,
+            photoChallengeCompleted = site.id in gamification.completedPhotoChallengeSiteIds,
+            onPhotoChallengeComplete = { viewModel.completePhotoChallenge(site.id, 50) },
             onDismiss = { viewModel.dismissSiteDetail() },
             onScanClick = {
                 viewModel.dismissSiteDetail()

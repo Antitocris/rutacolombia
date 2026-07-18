@@ -64,13 +64,18 @@ class MapViewModel(private val locationTracker: LocationTracker) : ViewModel() {
     }
 
     /** Llamar cuando ScanScreen termina una visita con éxito. La lámina queda "conseguida" pero gris hasta que se pegue. */
-    fun onVisitCompleted(result: VisitResult) {
+    fun onVisitCompleted(siteId: String, result: VisitResult) {
         if (!result.success) return
         _gamification.update { current ->
             current.copy(
                 totalXp = result.totalXp,
                 unlockedBadgeCodes = result.badge?.let { current.unlockedBadgeCodes + it.code }
                     ?: current.unlockedBadgeCodes,
+                capturedPhotoUrls = if (result.photoUrl.isNotBlank()) {
+                    current.capturedPhotoUrls + (siteId to result.photoUrl)
+                } else {
+                    current.capturedPhotoUrls
+                },
             )
         }
     }
@@ -80,6 +85,23 @@ class MapViewModel(private val locationTracker: LocationTracker) : ViewModel() {
         _gamification.update { current ->
             if (badgeCode !in current.unlockedBadgeCodes) return@update current
             current.copy(pastedBadgeCodes = current.pastedBadgeCodes + badgeCode)
+        }
+    }
+
+    /**
+     * Reto fotográfico comunitario de la tarjeta de un hito (ver
+     * ReviewsSection): otorga XP local al toque, una sola vez por sitio. Sin
+     * verificación por IA de que la foto en verdad corresponda al reto —
+     * limitación conocida de esta primera versión, documentada en
+     * GamificationState.
+     */
+    fun completePhotoChallenge(siteId: String, bonusXp: Int) {
+        _gamification.update { current ->
+            if (siteId in current.completedPhotoChallengeSiteIds) return@update current
+            current.copy(
+                totalXp = current.totalXp + bonusXp,
+                completedPhotoChallengeSiteIds = current.completedPhotoChallengeSiteIds + siteId,
+            )
         }
     }
 

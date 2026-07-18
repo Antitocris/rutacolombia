@@ -31,6 +31,15 @@ data class SiteBrief(
     /** Dato curioso, corto y con humor, para el reverso de la lámina — distinto del narrativeEs/En "serio" de la tarjeta del mapa. */
     val funFactEs: String,
     val funFactEn: String,
+    /**
+     * Foto histórica/antigua REAL (Wikimedia Commons, licencia libre) para el
+     * Feed de la Historia "antes/después" — null cuando no se encontró una
+     * fotografía de época genuina para este sitio (no se rellena con una
+     * foto moderna disfrazada). Ver `data/local/SiteCatalog.kt` para qué
+     * sitios sí tienen una.
+     */
+    val historicalPhotoUrl: String? = null,
+    val historicalPhotoYear: String? = null,
 )
 
 data class BadgeBrief(
@@ -45,6 +54,9 @@ enum class AlbumPage(val titleEs: String, val titleEn: String) {
     BOGOTA_COLONIAL("Bogotá Colonial", "Colonial Bogotá"),
     MUSEOS_E_HISTORIA("Museos e Historia", "Museums & History"),
     MURALLAS_DE_CARTAGENA("Murallas de Cartagena", "Walls of Cartagena"),
+    MIRADORES_Y_NATURALEZA("Miradores y Naturaleza", "Viewpoints & Nature"),
+    BOGOTA_MODERNA("Bogotá Moderna", "Modern Bogotá"),
+    PARQUES_Y_BARRIOS("Parques y Barrios", "Parks & Neighborhoods"),
 }
 
 fun SiteBrief.toHistoricalSite(isUnlocked: Boolean): HistoricalSite = HistoricalSite(

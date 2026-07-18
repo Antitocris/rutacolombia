@@ -6,12 +6,16 @@ import androidx.lifecycle.ViewModelProvider
 import co.exploracolombia.BuildConfig
 import co.exploracolombia.data.camera.CameraCaptureManager
 import co.exploracolombia.data.location.LocationTracker
+import co.exploracolombia.data.remote.SupabaseReviewsApi
 import co.exploracolombia.data.remote.SupabaseVisitApi
+import co.exploracolombia.data.repository.ReviewRepositoryImpl
 import co.exploracolombia.data.repository.VisitRepositoryImpl
 import co.exploracolombia.domain.model.HistoricalSite
+import co.exploracolombia.domain.repository.ReviewRepository
 import co.exploracolombia.domain.repository.VisitRepository
 import co.exploracolombia.domain.usecase.ValidateVisitUseCase
 import co.exploracolombia.presentation.map.MapViewModel
+import co.exploracolombia.presentation.reviews.ReviewsViewModel
 import co.exploracolombia.presentation.visit.VisitViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.android.Android
@@ -65,6 +69,24 @@ class AppContainer(context: Context) {
         VisitRepositoryImpl(supabaseVisitApi)
     }
 
+    // Las reseñas hablan directo con la API REST autogenerada de Supabase
+    // (PostgREST), no con la Edge Function de validate-visit — por eso
+    // derivan la URL base quitándole el sufijo "/functions/v1" a la misma
+    // variable de entorno que ya existe, en vez de pedir una nueva secret de
+    // CI solo para esto.
+    private val supabaseReviewsApi: SupabaseReviewsApi by lazy {
+        SupabaseReviewsApi(
+            httpClient = httpClient,
+            restBaseUrl = BuildConfig.SUPABASE_FUNCTIONS_BASE_URL.removeSuffix("/functions/v1") + "/rest/v1",
+            anonKey = BuildConfig.SUPABASE_ANON_KEY,
+            getUserJwt = { BuildConfig.LOCAL_TEST_JWT },
+        )
+    }
+
+    private val reviewRepository: ReviewRepository by lazy {
+        ReviewRepositoryImpl(supabaseReviewsApi)
+    }
+
     private val locationTracker: LocationTracker by lazy {
         LocationTracker(appContext)
     }
@@ -100,6 +122,16 @@ class AppContainer(context: Context) {
                 "AppContainer.mapViewModelFactory() solo sabe crear MapViewModel, pidieron $modelClass"
             }
             return MapViewModel(locationTracker) as T
+        }
+    }
+
+    fun reviewsViewModelFactory(siteId: String): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            require(modelClass.isAssignableFrom(ReviewsViewModel::class.java)) {
+                "AppContainer.reviewsViewModelFactory() solo sabe crear ReviewsViewModel, pidieron $modelClass"
+            }
+            return ReviewsViewModel(siteId, reviewRepository) as T
         }
     }
 }
