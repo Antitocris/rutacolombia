@@ -15,6 +15,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,16 +30,27 @@ import androidx.compose.ui.unit.dp
 import co.exploracolombia.domain.model.SiteBrief
 import co.exploracolombia.presentation.theme.RutaColors
 
+/**
+ * Tarjeta flotante (elevación real, no una franja que corta la pantalla) —
+ * MapScreen la posiciona sobre el mapa con márgenes, para que el mapa se
+ * sienta como el lienzo de fondo del juego y esto como un panel de HUD
+ * encima, al estilo de un mapa de RPG/aventura.
+ */
 @Composable
 fun GamificationHeader(
     gamification: GamificationState,
     sites: List<SiteBrief>,
     modifier: Modifier = Modifier,
 ) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = RutaColors.JungleGreenDark),
+        elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
+    ) {
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
-            .background(RutaColors.JungleGreenDark)
             .padding(horizontal = 20.dp, vertical = 16.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -109,6 +122,7 @@ fun GamificationHeader(
                 }
             }
         }
+    }
     }
 }
 
