@@ -10,19 +10,22 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import co.exploracolombia.domain.model.SiteBrief
 
 /**
- * Pantalla de entrada de la app (ver MainActivity/AppRoot). El mapa ocupa
- * TODA la pantalla — es el lienzo del juego — y el panel de gamificación
- * flota encima como una tarjeta con sombra, no como una franja que lo
- * divide en dos. Tocar un pin abre SiteDetailSheet; su botón "Escanear"
- * dispara [onScanRequested], que AppRoot usa para navegar a ScanScreen.
+ * Pantalla de entrada de la app (ver MainActivity/AppRoot). Mapa real
+ * (OpenStreetMap, ver RealMap.kt) a pantalla completa; el panel de
+ * gamificación flota encima como una tarjeta con sombra. Tocar un pin abre
+ * SiteDetailSheet; su botón "Escanear" dispara [onScanRequested].
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,20 +33,46 @@ fun MapScreen(
     viewModel: MapViewModel,
     onScanRequested: (SiteBrief) -> Unit,
 ) {
+    LocationPermissionGate {
+        MapContent(viewModel, onScanRequested)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MapContent(
+    viewModel: MapViewModel,
+    onScanRequested: (SiteBrief) -> Unit,
+) {
     val gamification by viewModel.gamification.collectAsState()
     val selectedSite by viewModel.selectedSite.collectAsState()
+    val userLocation by viewModel.userLocation.collectAsState()
+    val reachableSiteIds by viewModel.reachableSiteIds.collectAsState()
     val sheetState = rememberModalBottomSheetState()
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    // Ubicación de bajo consumo solo mientras el mapa está en foreground —
+    // misma disciplina de batería que ScanScreen (ver android/ARCHITECTURE.md).
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> viewModel.startLocationUpdates()
+                Lifecycle.Event.ON_PAUSE -> viewModel.stopLocationUpdates()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            viewModel.stopLocationUpdates()
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Mientras exista solo modo simulado, cualquier sitio del catálogo
-        // se considera "alcanzable" para que su pin aparezca activo en el
-        // mapa — cuando haya GPS real de vuelta, esto se calcula con
-        // haversineMeters() contra la ubicación en vivo (ver GeoMath.kt).
-        val reachableSiteIds = viewModel.sites.map { it.id }.toSet()
-
-        StylizedMap(
+        RealMap(
             sites = viewModel.sites,
             reachableSiteIds = reachableSiteIds,
+            userLocation = userLocation,
             onSiteTap = { viewModel.selectSite(it) },
             modifier = Modifier.fillMaxSize(),
         )

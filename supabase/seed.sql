@@ -166,3 +166,99 @@ values
   ('33333333-3333-3333-3333-333333333333', '44444444-4444-4444-4444-444444444444', 2),
   ('33333333-3333-3333-3333-333333333333', '55555555-5555-5555-5555-555555555555', 3),
   ('33333333-3333-3333-3333-333333333333', '66666666-6666-6666-6666-666666666666', 4);
+
+-- ============================================================================
+-- 3 hitos de La Candelaria, Bogotá. Coordenadas verificadas contra el
+-- geocodificador Nominatim de OpenStreetMap (no estimadas de memoria) —
+-- ver historial de la conversación. Sin ruta propia todavía: son sitios
+-- sueltos hasta que exista una "Ruta La Candelaria" como la de Cartagena.
+-- ============================================================================
+
+insert into public.badges (id, code, icon_url, rarity, name_es, name_en, name_fr, name_ru, description_es, description_en, description_fr, description_ru)
+values
+(
+  'dddddddd-dddd-dddd-dddd-dddddddddddd',
+  'plaza-bolivar',
+  'https://picsum.photos/seed/plaza-bolivar/200',
+  'common',
+  'Corazón de la República', 'Heart of the Republic', 'Cœur de la République', 'Сердце Республики',
+  'Visitaste la plaza cívica más importante de Colombia.',
+  'You visited Colombia''s most important civic square.',
+  'Vous avez visité la place civique la plus importante de Colombie.',
+  'Вы посетили главную гражданскую площадь Колумбии.'
+),
+(
+  'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
+  'chorro-quevedo',
+  'https://picsum.photos/seed/chorro-quevedo/200',
+  'rare',
+  'Fundador de la Ciudad', 'City Founder', 'Fondateur de la Ville', 'Основатель города',
+  'Llegaste al lugar donde la tradición dice que nació Bogotá.',
+  'You reached the place where tradition says Bogotá was born.',
+  'Vous avez atteint le lieu où, selon la tradition, Bogotá est née.',
+  'Вы добрались до места, где, по преданию, родилась Богота.'
+),
+(
+  'ffffffff-ffff-ffff-ffff-ffffffffffff',
+  'museo-del-oro',
+  'https://picsum.photos/seed/museo-del-oro/200',
+  'epic',
+  'Buscador de El Dorado', 'Seeker of El Dorado', 'Chercheur d''El Dorado', 'Искатель Эльдорадо',
+  'Recorriste la colección de orfebrería prehispánica más grande del mundo.',
+  'You explored the largest collection of pre-Hispanic goldwork in the world.',
+  'Vous avez parcouru la plus grande collection d''orfèvrerie préhispanique au monde.',
+  'Вы осмотрели крупнейшую в мире коллекцию доиспанского золота.'
+);
+
+insert into public.historical_sites (
+  id, code, department, city, lat, lng, geofence_radius_m, vision_reference,
+  title_es, title_en, title_fr, title_ru,
+  narrative_es, narrative_en, narrative_fr, narrative_ru,
+  xp_reward, badge_id
+)
+values
+(
+  'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+  'bogota-plaza-de-bolivar',
+  'Cundinamarca', 'Bogotá',
+  4.59814600, -74.07600400,
+  60,
+  '{}'::jsonb,
+  'Plaza de Bolívar', 'Bolívar Square', 'Place Bolívar', 'Площадь Боливара',
+  'Estás en el corazón cívico de Colombia: aquí laten el Capitolio Nacional, la Alcaldía, el Palacio de Justicia y la Catedral Primada, todos alrededor de la estatua de Simón Bolívar.',
+  'You''re in the civic heart of Colombia: the National Capitol, City Hall, the Palace of Justice and the Primatial Cathedral all surround the statue of Simón Bolívar here.',
+  'Vous êtes au cœur civique de la Colombie : le Capitole National, la Mairie, le Palais de Justice et la Cathédrale Primatiale entourent tous la statue de Simón Bolívar.',
+  'Вы находитесь в гражданском сердце Колумбии: Национальный Капитолий, мэрия, Дворец правосудия и кафедральный собор окружают статую Симона Боливара.',
+  100,
+  'dddddddd-dddd-dddd-dddd-dddddddddddd'
+),
+(
+  'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+  'bogota-chorro-de-quevedo',
+  'Cundinamarca', 'Bogotá',
+  4.59723400, -74.06970800,
+  40,
+  '{}'::jsonb,
+  'Chorro de Quevedo', 'Chorro de Quevedo', 'Chorro de Quevedo', 'Чорро-де-Кеведо',
+  'La tradición señala este rincón como el lugar exacto donde se fundó Bogotá en 1538. Hoy es el corazón bohemio de La Candelaria, lleno de artistas callejeros y cuenteros.',
+  'Tradition marks this corner as the exact spot where Bogotá was founded in 1538. Today it''s the bohemian heart of La Candelaria, full of street artists and storytellers.',
+  'La tradition désigne ce coin comme le lieu exact où Bogotá fut fondée en 1538. Aujourd''hui, c''est le cœur bohème de La Candelaria, plein d''artistes de rue et de conteurs.',
+  'По преданию, именно здесь в 1538 году была основана Богота. Сегодня это богемное сердце квартала Ла-Канделария, полное уличных артистов и рассказчиков.',
+  125,
+  'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'
+),
+(
+  'cccccccc-cccc-cccc-cccc-cccccccccccc',
+  'bogota-museo-del-oro',
+  'Cundinamarca', 'Bogotá',
+  4.60184000, -74.07185300,
+  40,
+  '{}'::jsonb,
+  'Museo del Oro', 'Gold Museum', 'Musée de l''Or', 'Музей золота',
+  'Alberga la colección de orfebrería prehispánica más grande del mundo: más de 30.000 piezas de oro que cuentan la historia de las culturas indígenas de Colombia.',
+  'Home to the largest collection of pre-Hispanic goldwork in the world: over 30,000 gold pieces that tell the story of Colombia''s Indigenous cultures.',
+  'Il abrite la plus grande collection d''orfèvrerie préhispanique au monde : plus de 30 000 pièces en or qui racontent l''histoire des cultures indigènes de Colombie.',
+  'Здесь хранится крупнейшая в мире коллекция доиспанских золотых изделий: более 30 000 золотых предметов, рассказывающих историю коренных культур Колумбии.',
+  175,
+  'ffffffff-ffff-ffff-ffff-ffffffffffff'
+);

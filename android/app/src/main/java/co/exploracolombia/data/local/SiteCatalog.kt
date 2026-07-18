@@ -10,12 +10,13 @@ import co.exploracolombia.domain.model.SiteBrief
  * "sitios cercanos a mi ubicación", este objeto se reemplaza por una
  * llamada de red, pero la forma (SiteBrief) no debería cambiar.
  *
- * Los 4 son lugares reales de la ciudad amurallada de Cartagena, muy cerca
- * entre sí. Las coordenadas de los 3 nuevos son ILUSTRATIVAS (ajustadas a
- * mano para caer a ~100/300/500m exactos del Baluarte, como se pidió
- * explícitamente "puntos simulados") — no son un levantamiento topográfico
- * real; para producción real habría que verificarlas con datos reales de
- * cada sitio.
+ * Dos grupos, ambos con coordenadas reales:
+ *  - 4 hitos de la ciudad amurallada de Cartagena. Los 3 que no son el
+ *    Baluarte tienen coordenadas ILUSTRATIVAS (ajustadas a mano para caer a
+ *    ~100/300/500m exactos del Baluarte, como se pidió explícitamente
+ *    "puntos simulados") — no son un levantamiento topográfico real.
+ *  - 3 hitos de La Candelaria, Bogotá, con coordenadas verificadas contra
+ *    el geocodificador Nominatim de OpenStreetMap (no estimadas de memoria).
  */
 object SiteCatalog {
     val baluarteSanFrancisco = SiteBrief(
@@ -125,5 +126,88 @@ object SiteCatalog {
         ),
     )
 
-    val all: List<SiteBrief> = listOf(baluarteSanFrancisco, puertaDelReloj, iglesiaSantoDomingo, lasBovedas)
+    // Coordenadas verificadas el 2026-07-18 contra Nominatim (OpenStreetMap),
+    // no estimadas de memoria — ver historial de la conversación.
+    val plazaDeBolivar = SiteBrief(
+        id = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        code = "bogota-plaza-de-bolivar",
+        department = "Cundinamarca",
+        city = "Bogotá",
+        lat = 4.598146,
+        lng = -74.076004,
+        geofenceRadiusMeters = 60,
+        titleEs = "Plaza de Bolívar",
+        titleEn = "Bolívar Square",
+        narrativeEs = "Estás en el corazón cívico de Colombia: aquí laten el Capitolio " +
+            "Nacional, la Alcaldía, el Palacio de Justicia y la Catedral Primada, todos " +
+            "alrededor de la estatua de Simón Bolívar.",
+        narrativeEn = "You're in the civic heart of Colombia: the National Capitol, City " +
+            "Hall, the Palace of Justice and the Primatial Cathedral all surround the " +
+            "statue of Simón Bolívar here.",
+        coverImageUrl = null,
+        xpReward = 100,
+        badge = BadgeBrief(
+            code = "plaza-bolivar",
+            nameEs = "Corazón de la República",
+            nameEn = "Heart of the Republic",
+            rarity = BadgeRarity.COMMON,
+        ),
+    )
+
+    val chorroDeQuevedo = SiteBrief(
+        id = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+        code = "bogota-chorro-de-quevedo",
+        department = "Cundinamarca",
+        city = "Bogotá",
+        lat = 4.597234,
+        lng = -74.069708,
+        geofenceRadiusMeters = 40,
+        titleEs = "Chorro de Quevedo",
+        titleEn = "Chorro de Quevedo",
+        narrativeEs = "La tradición señala este rincón como el lugar exacto donde se " +
+            "fundó Bogotá en 1538. Hoy es el corazón bohemio de La Candelaria, lleno de " +
+            "artistas callejeros y cuenteros.",
+        narrativeEn = "Tradition marks this corner as the exact spot where Bogotá was " +
+            "founded in 1538. Today it's the bohemian heart of La Candelaria, full of " +
+            "street artists and storytellers.",
+        coverImageUrl = null,
+        xpReward = 125,
+        badge = BadgeBrief(
+            code = "chorro-quevedo",
+            nameEs = "Fundador de la Ciudad",
+            nameEn = "City Founder",
+            rarity = BadgeRarity.RARE,
+        ),
+    )
+
+    val museoDelOro = SiteBrief(
+        id = "cccccccc-cccc-cccc-cccc-cccccccccccc",
+        code = "bogota-museo-del-oro",
+        department = "Cundinamarca",
+        city = "Bogotá",
+        lat = 4.601840,
+        lng = -74.071853,
+        geofenceRadiusMeters = 40,
+        titleEs = "Museo del Oro",
+        titleEn = "Gold Museum",
+        narrativeEs = "Alberga la colección de orfebrería prehispánica más grande del " +
+            "mundo: más de 30.000 piezas de oro que cuentan la historia de las " +
+            "culturas indígenas de Colombia.",
+        narrativeEn = "Home to the largest collection of pre-Hispanic goldwork in the " +
+            "world: over 30,000 gold pieces that tell the story of Colombia's " +
+            "Indigenous cultures.",
+        coverImageUrl = null,
+        xpReward = 175,
+        badge = BadgeBrief(
+            code = "museo-del-oro",
+            nameEs = "Buscador de El Dorado",
+            nameEn = "Seeker of El Dorado",
+            rarity = BadgeRarity.EPIC,
+        ),
+    )
+
+    val all: List<SiteBrief> = listOf(
+        baluarteSanFrancisco, puertaDelReloj, iglesiaSantoDomingo, lasBovedas,
+        plazaDeBolivar, chorroDeQuevedo, museoDelOro,
+    )
 }

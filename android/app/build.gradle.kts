@@ -147,6 +147,11 @@ tasks.matching { it.name == "assembleRelease" || it.name == "bundleRelease" }.co
 }
 
 dependencies {
+    // --- Mapa real (OpenStreetMap vía osmdroid): gratis, sin API key ni
+    //     cuenta de Google Cloud/facturación — a diferencia del Maps SDK de
+    //     Google. Descarga tiles del servidor público de OSM.
+    implementation("org.osmdroid:osmdroid-android:6.1.20")
+
     // --- Jetpack Compose (UI, Material 3, Foundation, Animation) ---
     implementation(platform("androidx.compose:compose-bom:2026.06.00"))
     implementation("androidx.compose.ui:ui")

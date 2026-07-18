@@ -11,6 +11,7 @@ import co.exploracolombia.data.repository.VisitRepositoryImpl
 import co.exploracolombia.domain.model.HistoricalSite
 import co.exploracolombia.domain.repository.VisitRepository
 import co.exploracolombia.domain.usecase.ValidateVisitUseCase
+import co.exploracolombia.presentation.map.MapViewModel
 import co.exploracolombia.presentation.visit.VisitViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.android.Android
@@ -91,4 +92,14 @@ class AppContainer(context: Context) {
                 return VisitViewModel(targetSite, locationTracker, cameraCaptureManager, validateVisitUseCase) as T
             }
         }
+
+    fun mapViewModelFactory(): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            require(modelClass.isAssignableFrom(MapViewModel::class.java)) {
+                "AppContainer.mapViewModelFactory() solo sabe crear MapViewModel, pidieron $modelClass"
+            }
+            return MapViewModel(locationTracker) as T
+        }
+    }
 }

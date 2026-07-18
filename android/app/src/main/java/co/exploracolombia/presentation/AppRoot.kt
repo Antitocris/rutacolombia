@@ -22,7 +22,7 @@ import co.exploracolombia.presentation.visit.VisitViewModel
  */
 @Composable
 fun AppRoot(appContainer: AppContainer) {
-    val mapViewModel: MapViewModel = viewModel()
+    val mapViewModel: MapViewModel = viewModel(factory = appContainer.mapViewModelFactory())
     var scanningSiteId by rememberSaveable { mutableStateOf<String?>(null) }
     val scanningSite = scanningSiteId?.let { id -> mapViewModel.sites.find { it.id == id } }
 
