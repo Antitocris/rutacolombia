@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        La UI real vive en Compose (MaterialTheme en RutaColombiaTheme.kt),
+        así que este tema del sistema solo cubre la ventana pre-Compose
+        (splash del sistema, barra de estado) — sin ActionBar clásico.
+    -->
+    <style name="Theme.RutaColombia" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:statusBarColor">@color/ruta_jungle_green_dark</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="colorPrimary">@color/ruta_gold</item>
+        <item name="colorPrimaryDark">@color/ruta_jungle_green_dark</item>
+    </style>
+</resources>

@@ -1,0 +1,82 @@
+# supabase/config.toml — configuración del entorno LOCAL (supabase start).
+# Generado a mano a partir de la plantilla oficial del CLI (supabase init),
+# recortado a lo que RutaColombia usa. No confundir con la configuración de
+# producción: eso vive en el dashboard del proyecto enlazado.
+#
+# NOTA sobre PostGIS: el CLI de Supabase no tiene un bloque declarativo para
+# activar extensiones de Postgres arbitrarias (no existe un [db.extensions]
+# con una lista de nombres). Las extensiones se activan con SQL real dentro
+# de una migración, que es justo lo que hace la primera línea relevante de
+# supabase/migrations/20260717120000_init_schema.sql:
+#     create extension if not exists postgis;
+# `supabase db reset` (o el primer `supabase start`) ejecuta esa migración
+# y con eso PostGIS queda activo en la base local — no hay nada que tocar
+# aquí para eso.
+
+project_id = "rutacolombia"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 17
+
+[db.pooler]
+enabled = false
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[realtime]
+enabled = true
+
+[studio]
+enabled = true
+port = 54323
+api_url = "http://127.0.0.1"
+
+[inbucket]
+enabled = true
+port = 54324
+smtp_port = 54325
+pop3_port = 54326
+
+[storage]
+enabled = true
+file_size_limit = "10MiB"
+
+# A propósito NO hay aquí un bloque [storage.buckets.visit-photos]: ese
+# bloque solo sirve para desarrollo local (`supabase start`) y no se replica
+# al proyecto remoto con `supabase db push`. El bucket "visit-photos" que
+# usa supabase/functions/validate-visit/index.ts se crea en cambio por
+# migración SQL — ver supabase/migrations/20260717120001_storage_buckets.sql
+# — así queda idéntico en local y en producción con el mismo comando.
+
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:3000"
+additional_redirect_urls = []
+jwt_expiry = 3600
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+# Desactivado en local para poder crear usuarios de prueba con un solo curl
+# a /auth/v1/signup y usar el access_token devuelto de inmediato, sin tener
+# que ir a buscar el correo de confirmación en Inbucket (puerto 54324).
+enable_confirmations = false
+
+[edge_runtime]
+enabled = true
+# "oneshot" recarga la función en cada invocación (equivalente a --watch);
+# ideal en desarrollo para no tener que reiniciar `functions serve` cada vez
+# que se edita validate-visit/index.ts.
+policy = "oneshot"
+inspector_port = 8083

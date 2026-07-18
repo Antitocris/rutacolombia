@@ -1,0 +1,25 @@
+# Copia las líneas que necesites a android/local.properties (ese archivo lo
+# gestiona Android Studio automáticamente para sdk.dir, y está en
+# .gitignore — nunca se commitea). No lo sobreescribas completo si ya
+# existe: solo agrégale estas líneas.
+
+# access_token de un usuario de prueba. Lo lee app/build.gradle.kts (buildType
+# debug) y lo expone como BuildConfig.LOCAL_TEST_JWT — lo usa
+# di/AppContainer.kt como el JWT que SupabaseVisitApi manda en cada request.
+# Expira en 1h contra un proyecto local (jwt_expiry = 3600 en
+# supabase/config.toml); en el proyecto de nube puede durar más, pero igual
+# expira algún día — si la app empieza a dar 401, hay que generar uno nuevo.
+LOCAL_TEST_JWT=eyJ-pega-aqui-el-access_token-real
+
+# Si no lo pones, se usa el valor por defecto de app/build.gradle.kts:
+# http://10.0.2.2:54321/functions/v1 (el backend LOCAL, vía la IP puente del
+# emulador). Ponlo solo si quieres que tu build debug apunte a un proyecto de
+# Supabase en la nube en vez de tu backend local — ej. para reproducir algo
+# que solo pasa en el APK del Director.
+SUPABASE_FUNCTIONS_BASE_URL=https://tu-project-ref.supabase.co/functions/v1
+
+# anon/publishable key del proyecto (Settings -> API en el dashboard de
+# Supabase). El gateway de producción la exige en el header `apikey` de toda
+# request — sin ella, 401 aunque el JWT sea válido. Es pública por diseño,
+# no es un secreto que haya que proteger como una contraseña.
+SUPABASE_ANON_KEY=eyJ-pega-aqui-la-anon-key

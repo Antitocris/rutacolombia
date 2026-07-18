@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Paleta base para el tema del sistema (fuera de Compose): dorado
+         colonial sobre verde selva, alineado con la identidad visual de las
+         insignias legendarias/comunes descrita en MICROINTERACTIONS.md. -->
+    <color name="ruta_gold">#F4C542</color>
+    <color name="ruta_jungle_green">#1E3D2C</color>
+    <color name="ruta_jungle_green_dark">#12271B</color>
+    <color name="ruta_white">#FFFFFF</color>
+</resources>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Solo para el build de debug: permite HTTP sin cifrar hacia el emulador
+    (10.0.2.2 = localhost del host) y hacia localhost, para poder apuntar a
+    `supabase functions serve` corriendo en la máquina de desarrollo sin
+    necesidad de un túnel HTTPS. Todo lo demás sigue exigiendo TLS.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">10.0.2.2</domain>
+        <domain includeSubdomains="true">localhost</domain>
+    </domain-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

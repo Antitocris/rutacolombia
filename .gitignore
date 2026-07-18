@@ -1,0 +1,34 @@
+# Secretos locales — nunca commitear
+supabase/functions/**/.env
+supabase/.env
+supabase/.temp/
+.env
+.env.local
+
+# Supabase CLI
+supabase/.branches/
+
+# Android / Gradle
+android/local.properties
+android/**/build/
+android/.gradle/
+android/.idea/
+android/*.iml
+android/captures/
+android/.cxx/
+android/.kotlin/
+
+# Encontrado suelto en la raíz del proyecto al preparar el primer commit —
+# no lo puso ninguna instrucción de esta guía y su nombre indica que es una
+# contraseña. Se excluye por seguridad; no se commitea ni se borra.
+App Pass.txt
+
+# android/app/debug.keystore SÍ se commitea a propósito (ver app/build.gradle.kts,
+# signingConfigs.debug): un keystore de debug no es un secreto — password y
+# alias son los estándares públicos de Android ("android"/"androiddebugkey").
+# Compartirlo hace que todo build debug (local o de CI) firme igual, para
+# poder instalar una versión nueva del APK sobre la anterior sin desinstalar.
+
+# OS / editor
+.DS_Store
+Thumbs.db

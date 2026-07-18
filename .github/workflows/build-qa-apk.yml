@@ -1,0 +1,70 @@
+name: Build QA APK
+
+# Se dispara solo a mano desde la pestaña "Actions" de GitHub (botón "Run
+# workflow") — así el Director controla exactamente cuándo se genera un
+# nuevo APK, en vez de que cada push dispare una compilación.
+on:
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Configurar JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      # local.properties nunca se commitea (está en .gitignore) — se genera
+      # aquí mismo, en el runner, a partir de los 3 secrets del repo. Mismo
+      # mecanismo que usa un desarrollador en su máquina con
+      # android/local.properties.example, solo que automático.
+      - name: Escribir local.properties con los secrets del proyecto
+        run: |
+          cat >> local.properties <<EOF
+          SUPABASE_FUNCTIONS_BASE_URL=${{ secrets.SUPABASE_FUNCTIONS_BASE_URL }}
+          SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+          LOCAL_TEST_JWT=${{ secrets.QA_TEST_JWT }}
+          EOF
+
+      - name: Dar permiso de ejecución a gradlew
+        run: chmod +x gradlew
+
+      # assembleDebug, no assembleRelease: este es el APK de prueba (firmado
+      # con la clave debug estándar de Android, instalable sin Play Store).
+      # MOCK_LOCATION_ENABLED=true viene de app/build.gradle.kts (buildType
+      # debug) — no hace falta nada especial aquí para activarlo.
+      - name: Compilar el APK de prueba
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Renombrar el APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/RutaColombia-QA.apk
+
+      # Un Release de GitHub da un link de descarga directo y estable
+      # (.../releases/latest/download/RutaColombia-QA.apk) que no exige
+      # iniciar sesión en GitHub para descargar, a diferencia de los
+      # artifacts normales de Actions — clave para que el Director lo
+      # abra directo desde el celular.
+      - name: Publicar como GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: qa-build-${{ github.run_number }}
+          name: "RutaColombia — build de prueba #${{ github.run_number }}"
+          files: android/app/build/outputs/apk/debug/RutaColombia-QA.apk
+          make_latest: true
+          body: |
+            APK de prueba generado automáticamente. Instala sobre el celular
+            con "Instalar apps desconocidas" habilitado para esta fuente —
+            se puede instalar encima de una versión anterior sin desinstalar
+            (todos los builds debug firman con la misma clave, ver
+            android/debug.keystore).
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
