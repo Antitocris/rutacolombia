@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.FloatingActionButton
@@ -34,7 +33,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -49,10 +51,13 @@ private const val REGION_CENTER_LAT = 10.4236
 private const val REGION_CENTER_LNG = -75.5478
 
 /** Cuántos "grados de mundo" caben de borde a borde del lienzo con zoom 1x. */
-private const val WORLD_SPAN_DEGREES = 0.01
+private const val WORLD_SPAN_DEGREES = 0.016
 
 private const val PIN_SIZE_DP = 52
-private const val MIN_SCALE = 0.6f
+
+// MIN_SCALE bajo a propósito: con 4 hitos repartidos en ~500m, hace falta
+// poder alejar la cámara para verlos todos a la vez, no solo el más cercano.
+private const val MIN_SCALE = 0.35f
 private const val MAX_SCALE = 4f
 
 /**
@@ -221,22 +226,95 @@ private fun RadarRipple(progress: Float, color: Color, modifier: Modifier = Modi
 }
 
 private fun DrawScope.drawTerrain(canvasSize: Size) {
+    val seaWidth = canvasSize.width * 0.2f
+
     // Franja de "mar" a la izquierda — Cartagena es costera, ancla el mapa visualmente.
     drawRect(
         color = Color(0xFFBFD8D4),
         topLeft = Offset(0f, 0f),
-        size = Size(canvasSize.width * 0.22f, canvasSize.height),
+        size = Size(seaWidth, canvasSize.height),
     )
-    // Un par de curvas de nivel suaves, decorativas, para que no se vea vacío.
-    val contourColor = RutaColors.StoneGrey.copy(alpha = 0.18f)
-    for (i in 1..3) {
-        val r = canvasSize.minDimension * (0.25f + i * 0.14f)
-        drawCircle(
-            color = contourColor,
-            radius = r,
-            center = Offset(canvasSize.width * 0.62f, canvasSize.height * 0.55f),
-            style = Stroke(width = 2.5f),
+
+    drawWallsOutline(canvasSize, seaWidth)
+    drawStreetGrid(canvasSize, seaWidth)
+    drawParks(canvasSize)
+}
+
+/**
+ * El contorno de "las murallas" que le dan nombre a la ruta: un polígono
+ * irregular tipo fuerte estrellado, en línea punteada dorada — más temático
+ * que un rectángulo, y refuerza visualmente de qué trata el juego.
+ */
+private fun DrawScope.drawWallsOutline(canvasSize: Size, seaWidth: Float) {
+    val left = seaWidth + canvasSize.width * 0.04f
+    val right = canvasSize.width * 0.94f
+    val top = canvasSize.height * 0.12f
+    val bottom = canvasSize.height * 0.88f
+
+    val path = Path().apply {
+        moveTo(left, top + (bottom - top) * 0.25f)
+        lineTo(left + (right - left) * 0.18f, top)
+        lineTo(left + (right - left) * 0.55f, top + (bottom - top) * 0.06f)
+        lineTo(right, top + (bottom - top) * 0.22f)
+        lineTo(right - (right - left) * 0.1f, bottom * 0.7f)
+        lineTo(right, bottom)
+        lineTo(left + (right - left) * 0.4f, bottom)
+        lineTo(left, bottom - (bottom - top) * 0.2f)
+        close()
+    }
+    drawPath(
+        path,
+        color = RutaColors.Gold.copy(alpha = 0.55f),
+        style = Stroke(width = 4f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(18f, 12f))),
+    )
+    drawPath(path, color = RutaColors.Gold.copy(alpha = 0.05f), style = Fill)
+}
+
+/** Calle principal + una cuadrícula irregular de calles secundarias, tipo centro colonial. */
+private fun DrawScope.drawStreetGrid(canvasSize: Size, seaWidth: Float) {
+    val streetColor = RutaColors.StoneGrey.copy(alpha = 0.35f)
+    val avenueColor = RutaColors.StoneGrey.copy(alpha = 0.5f)
+
+    // Avenida principal, paralela a la costa.
+    drawLine(
+        color = avenueColor,
+        start = Offset(seaWidth + 12f, canvasSize.height * 0.1f),
+        end = Offset(seaWidth + 12f, canvasSize.height * 0.9f),
+        strokeWidth = 5f,
+    )
+
+    val verticalFractions = listOf(0.32f, 0.46f, 0.6f, 0.74f, 0.88f)
+    verticalFractions.forEach { fx ->
+        drawLine(
+            color = streetColor,
+            start = Offset(canvasSize.width * fx, canvasSize.height * 0.08f),
+            end = Offset(canvasSize.width * fx, canvasSize.height * 0.92f),
+            strokeWidth = 2.5f,
         )
+    }
+
+    val horizontalFractions = listOf(0.22f, 0.38f, 0.54f, 0.7f, 0.85f)
+    horizontalFractions.forEach { fy ->
+        drawLine(
+            color = streetColor,
+            start = Offset(seaWidth, canvasSize.height * fy),
+            end = Offset(canvasSize.width * 0.94f, canvasSize.height * fy),
+            strokeWidth = 2.5f,
+        )
+    }
+}
+
+/** Bloques verdes redondeados simulando plazas/parques del centro histórico. */
+private fun DrawScope.drawParks(canvasSize: Size) {
+    val parkColor = RutaColors.JungleGreenLight.copy(alpha = 0.4f)
+    val parks = listOf(
+        Offset(canvasSize.width * 0.4f, canvasSize.height * 0.3f) to canvasSize.minDimension * 0.07f,
+        Offset(canvasSize.width * 0.68f, canvasSize.height * 0.68f) to canvasSize.minDimension * 0.06f,
+        Offset(canvasSize.width * 0.5f, canvasSize.height * 0.75f) to canvasSize.minDimension * 0.045f,
+    )
+    parks.forEach { (center, radius) ->
+        drawCircle(color = parkColor, radius = radius, center = center)
+        drawCircle(color = parkColor.copy(alpha = 0.7f), radius = radius, center = center, style = Stroke(width = 2f))
     }
 }
 
