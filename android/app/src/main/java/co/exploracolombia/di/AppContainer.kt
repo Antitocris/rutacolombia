@@ -8,6 +8,7 @@ import co.exploracolombia.data.camera.CameraCaptureManager
 import co.exploracolombia.data.location.LocationTracker
 import co.exploracolombia.data.remote.SupabaseVisitApi
 import co.exploracolombia.data.repository.VisitRepositoryImpl
+import co.exploracolombia.domain.model.HistoricalSite
 import co.exploracolombia.domain.repository.VisitRepository
 import co.exploracolombia.domain.usecase.ValidateVisitUseCase
 import co.exploracolombia.presentation.visit.VisitViewModel
@@ -75,13 +76,19 @@ class AppContainer(context: Context) {
         ValidateVisitUseCase(visitRepository)
     }
 
-    fun visitViewModelFactory(): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            require(modelClass.isAssignableFrom(VisitViewModel::class.java)) {
-                "AppContainer.visitViewModelFactory() solo sabe crear VisitViewModel, pidieron $modelClass"
+    /**
+     * [targetSite] llega desde MapScreen (el hito que el usuario tocó) — se
+     * necesita un factory nuevo por cada sitio porque VisitViewModel ya no
+     * asume un único hito fijo (ver domain/model/HistoricalSite.kt).
+     */
+    fun visitViewModelFactory(targetSite: HistoricalSite): ViewModelProvider.Factory =
+        object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                require(modelClass.isAssignableFrom(VisitViewModel::class.java)) {
+                    "AppContainer.visitViewModelFactory() solo sabe crear VisitViewModel, pidieron $modelClass"
+                }
+                return VisitViewModel(targetSite, locationTracker, cameraCaptureManager, validateVisitUseCase) as T
             }
-            return VisitViewModel(locationTracker, cameraCaptureManager, validateVisitUseCase) as T
         }
-    }
 }

@@ -17,35 +17,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-/**
- * Sitio de prueba fijo — coincide exactamente con supabase/seed.sql
- * (Baluarte de San Francisco, Cartagena). Cuando exista selección real de
- * sitios desde una ruta, este valor llega por argumento de navegación en
- * lugar de estar fijo aquí; por ahora es la única forma de probar el flujo
- * completo contra el backend local sin tener aún esa pantalla.
- */
-val TEST_SITE = HistoricalSite(
-    id = "11111111-1111-1111-1111-111111111111",
-    code = "cartagena-murallas-baluarte-san-francisco",
-    department = "Bolívar",
-    city = "Cartagena de Indias",
-    lat = 10.4236,
-    lng = -75.5478,
-    geofenceRadiusMeters = 40,
-    title = "Baluarte de San Francisco",
-    narrative = "",
-    coverImageUrl = null,
-    xpReward = 100,
-    isUnlocked = false,
-)
-
 class VisitViewModel(
+    val targetSite: HistoricalSite,
     private val locationTracker: LocationTracker,
     private val cameraCaptureManager: CameraCaptureManager,
     private val validateVisitUseCase: ValidateVisitUseCase,
 ) : ViewModel() {
-
-    val targetSite: HistoricalSite = TEST_SITE
 
     private val _uiState = MutableStateFlow<VisitUiState>(VisitUiState.Idle)
     val uiState: StateFlow<VisitUiState> = _uiState.asStateFlow()
